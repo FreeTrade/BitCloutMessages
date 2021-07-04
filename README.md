@@ -4,7 +4,7 @@ BitClout Messages is a GUI that allows you to encrypt messages using someone's B
 
 # How To Create A Message
 1. Visit https://freetrade.github.io/BitCloutMessages/
-2. Enter the address(public key) of the BitClout reciptient. (Hint, it starts with 'BC1...')
+2. Enter the address(public key) of the BitClout recipient. (Hint, it starts with 'BC1...')
 3. Enter the secret message
 4. Press 'Encrypt' button
 5. Send the generated encrypted message by email or some other method.
@@ -68,7 +68,7 @@ async function encryptMessage(bcpubkey, message, element) {
       // Decrypt the message
       try {
 
-        //User the Bitbox library to get the private key from Seed Phrase
+        //Use the Bitbox library to get the private key from Seed Phrase
         //uses the standard Bitcoin derivation
         var pkWIF = new bitboxSdk.Mnemonic().toKeypairs(loginkey, 1, false, "44'/0'/0'/0/")[0].privateKeyWIF;
 
