@@ -1,0 +1,171 @@
+<!-- 
+//////////////////////////////////////////////////////
+
+FREE HTML5 TEMPLATE 
+DESIGNED & DEVELOPED by FREEHTML5.CO
+
+//////////////////////////////////////////////////////
+ -->
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>BitClout Messages</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BitClout Messages" />
+  <meta name="keywords" content="BitClout Messages" />
+  <meta name="author" content="FreeTrade" />
+
+  <!-- Facebook and Twitter integration -->
+  <meta property="og:title" content="BitClout Messages" />
+  <meta property="og:image" content="" />
+  <meta property="og:url" content="" />
+  <meta property="og:site_name" content="BitClout Messages" />
+  <meta property="og:description" content="BitClout Messages" />
+  <meta name="twitter:title" content="BitClout Messages" />
+  <meta name="twitter:image" content="" />
+  <meta name="twitter:url" content="" />
+  <meta name="twitter:card" content="" />
+
+
+  <!-- Google Webfont -->
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,300,700|Unica+One' rel='stylesheet' type='text/css'>
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="css/bootstrap.css">
+
+  <!-- Theme Style -->
+  <link rel="stylesheet" href="css/style.css">
+
+
+  <!-- FOR IE9 below -->
+  <!--[if lt IE 9]>
+   <script src="js/modernizr-2.6.2.min.js"></script>
+   <script src="js/respond.min.js"></script>
+   <![endif]-->
+
+</head>
+
+<body>
+  <script src="js/buffer.js"></script>
+  <script src="js/bitboxsdk.js"></script>
+  <script src="js/eccrypto-js.js"></script>
+
+  <div class="container">
+    <div class="fh5co-page-title text-center">
+      <h1 class="fh5co-title">BitClout Messages</h1>
+      <h2 class="fh5co-title-sub"><br />
+
+        <h3>Encrypt</h3>
+
+        Encrypt your message and send it to the recipient by e-mail or any other means.<br /><br />
+
+        Bitclout Address Of Recipient<br />
+        <input size="80" id="recipientbcaddress" /><br />
+        Message<br />
+        <textarea rows="3" cols="80" id="messagetoencrypt"></textarea><br />
+        <button onclick="encryptMessage(
+    document.getElementById('recipientbcaddress').value,
+    document.getElementById('messagetoencrypt').value,
+    document.getElementById('encryptedmessage')
+    );">Encrypt</button><br />
+        Encrypted Message<br />
+        <textarea rows="3" cols="80" id="encryptedmessage"></textarea><br />
+
+        <hr />
+        <br />
+
+        <h3>Decrypt</h3>
+        Decrypt your message using your seed phrase.<br />
+        Seed Phrase of Recipient<br />
+        <input size="80" id="seedphraserecipient" /><br />
+        Encrypted Message<br />
+        <textarea rows="3" cols="80" id="previouslyencryptedmessage"></textarea><br /><br />
+        <button onclick="decryptMessage(
+    document.getElementById('seedphraserecipient').value,
+    document.getElementById('previouslyencryptedmessage').value,
+    document.getElementById('decryptedmessage')
+    );">Decrypt</button><br />
+
+        Decrypted Message<br />
+        <textarea rows="3" cols="80" id="decryptedmessage"></textarea><br />
+
+    </div>
+  </div>
+  <script>
+
+    const Buffer = buffer.Buffer;
+
+    async function encryptMessage(bcpubkey, message, element) {
+
+      // Encrypt the message
+      try {
+        //Decode the BitClout Public Key From BS58 check format
+        var preslice = window.bs58check.decode(bcpubkey);
+
+        //Remove the first three characters (these aren't part of the public key and just identify as a BitClout address)
+        var bcpublicKey = preslice.slice(3);
+
+        //Convert the public key into a Buffer for use with the encryption library
+        const pubKeyBuf = Buffer.from(bcpublicKey, 'hex');
+
+        //Convert the message into a buffer for use with the library
+        const data = Buffer.from(message);
+
+        //Encrypt the message using the public key using the eccryptoJS library
+        const structuredEj = await eccryptoJs.encrypt(pubKeyBuf, data);
+
+        //Convert the message to a hex string
+        const encryptedMessage = eccryptoJs.serialize(structuredEj).toString('hex');
+
+        //Place the hex string in the GUI element.
+        element.value = encryptedMessage;
+      } catch (err) {
+        alert(err);
+      }
+    }
+
+    async function decryptMessage(loginkey, message, element) {
+
+      // Decrypt the message
+      try {
+
+        //User the Bitbox library to get the private key from Seed Phrase
+        //uses the standard Bitcoin derivation
+        var pkWIF = new bitboxSdk.Mnemonic().toKeypairs(loginkey, 1, false, "44'/0'/0'/0/")[0].privateKeyWIF;
+
+        //Create the cyptographic pair from the privatekeyWIF
+        let ecpair = new bitboxSdk.ECPair().fromWIF(pkWIF);
+
+        //the private key as hex
+        var privkeyhex = ecpair.d.toHex();
+
+        //Convert private key to buffer for use with crypto library
+        var privateKeyBuf = Buffer.from(privkeyhex, 'hex');
+
+        //Convert hex to binary buffer
+        const encrypted = eccryptoJs.deserialize(Buffer.from(message, 'hex'));
+
+        //Decrypt the encrypted message using the private key
+        const structuredEj = await eccryptoJs.decrypt(privateKeyBuf, encrypted);
+
+        //Place the hex string in the GUI element.
+        element.value = structuredEj.toString();
+
+      } catch (err) {
+        alert(err);
+      }
+    }
+  </script>
+
+</body>
+
+</html>
